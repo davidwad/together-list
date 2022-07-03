@@ -1,9 +1,5 @@
 from django.db import models
-
-
-class User(models.Model):
-    name = models.CharField(max_length=50)
-    private_key = models.CharField(max_length=50)
+from django.contrib.auth.models import User
 
 
 class Track(models.Model):

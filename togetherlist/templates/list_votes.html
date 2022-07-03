@@ -1,0 +1,12 @@
+<table summary="vote results">
+    <style>
+        table, th, td {
+        border: 1px solid black;
+        border-collapse: collapse;
+        }
+    </style>
+    <tr><th>Track</th><th>Artist</th><th>Votes</th><th>Voters</th>
+    {% for track in tracks %}
+        <tr><td>{{ track.track }}</td><td>{{ track.artist }}</td><td>{{ track.n_votes }}</td><td>{{ track.voters }}</td></tr>
+    {% endfor %}
+</table>

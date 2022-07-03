@@ -7,11 +7,12 @@ from django.shortcuts import render, redirect
 from django.http import HttpResponse, HttpResponseRedirect
 
 from .forms import TrackForm, UserForm
+from .models import Vote
 from app.apicaller import ApiCaller
 
 
-PLAYLIST_ID = "7db8ovaFEAB4blO9f1oEEy?si=c05681fba3d546f6"
-# PLAYLIST_ID = '0bWBuhxBO3Ke2FC9Q6AjZk?si=f99503563b884268'
+# PLAYLIST_ID = "7db8ovaFEAB4blO9f1oEEy?si=c05681fba3d546f6"
+PLAYLIST_ID = '0bWBuhxBO3Ke2FC9Q6AjZk?si=f99503563b884268'
 
 
 def signin(request):
@@ -82,13 +83,44 @@ def vote(request):
     if request.method == 'POST':
         form = TrackForm(request.POST, choices=form_list)
         if form.is_valid():
-            print(form.cleaned_data)
-            return HttpResponseRedirect('register-vote')
+            votes = form.cleaned_data
+            for track_id in votes.get(form.form_name):
+                vote_instance = Vote(user=user, track_id=track_id)
+                vote_instance.save()
+            return HttpResponseRedirect('results')
+        else:
+            return render(request, 'vote.html', {'form': form})
     else:
         form = TrackForm(choices=form_list)
-        return render(request, 'name.html', {'form': form})
+        return render(request, 'vote.html', {'form': form})
 
 
-def register_vote(request):
-    if request.method == 'POST':
-        return HttpResponse('Thank you for voting.')
+def results(request):
+    request_url = 'playlists/{playlist_id}/tracks'.format(
+        playlist_id=PLAYLIST_ID)
+    response = ApiCaller.get(request_url)
+    response_dict = response.json()
+    track_vote_list = []
+    for track in response_dict['tracks']['items']:
+        track_dict = {}
+        id = track['track']['id']
+        name = track['track']['name']
+        artists = [artist['name'] for artist in track['track']['artists']]
+        track_dict['artist'] = ', '.join(artists)
+        track_dict['track'] = name
+        votes = Vote.objects.filter(track_id=id)
+        if votes:
+            n_votes = str(len(votes))
+            track_dict['n_votes'] = n_votes
+            voters = [vote_instance.user.username for vote_instance in votes]
+            track_dict['voters'] = ', '.join(voters)
+        else:
+            track_dict['n_votes'] = '0'
+            track_dict['voters'] = ''
+        track_vote_list.append(track_dict)
+    return render(request, 'list_votes.html', {'tracks': track_vote_list})
+
+
+def reset_votes(request):
+    Vote.objects.all().delete()
+    return HttpResponse("Deleted votes")
