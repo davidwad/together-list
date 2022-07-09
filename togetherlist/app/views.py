@@ -19,6 +19,8 @@ from app.apicaller import ApiCaller
 # Real
 PLAYLIST_ID = '0bWBuhxBO3Ke2FC9Q6AjZk?si=f99503563b884268'
 
+N_WINNERS = 3
+
 
 def signin(request):
     if request.method == "POST":
@@ -129,6 +131,40 @@ def results(request):
         track_vote_list.append(track_dict)
     return render(request, 'list_votes.html', {'tracks': track_vote_list})
 
+
+@user_passes_test(lambda u: u.is_superuser)
+def finish_vote(request):
+    vote_dict = {}
+    # Count votes for each track
+    for vote_instance in Vote.objects.all():
+        track_id = vote_instance.track_id
+        if track_id in vote_dict:
+            vote_dict[track_id] += 1
+        else:
+            vote_dict[track_id] = 1
+
+    votes_sorted = sorted(vote_dict.items(), key=cmp_to_key(compare_random_ties), reverse=True)
+    top_tracks = [vote_inst[0] for vote_inst in votes_sorted[:N_WINNERS]]
+    response = ApiCaller.get('tracks', params={'ids': ','.join(top_tracks)})
+    track_names = [track_item['name'] for track_item in response.json()['tracks']]
+    return HttpResponse("Results: {" + ' | '.join(track_names) + '}')
+
+
+@user_passes_test(lambda u: u.is_superuser)
+def reset_votes(request):
+    Vote.objects.all().delete()
+    return HttpResponse("Deleted votes")
+
+
+def compare_random_ties(x, y):
+    if x[1] < y[1]:
+        return -1
+    elif x[1] > y[1]:
+        return 1
+    else:
+        return random.randint(0, 1) * 2 - 1
+
+
 # @user_passes_test(lambda u: u.is_superuser)
 # def finish_vote(request):
 #     n_winners = 1
@@ -161,17 +197,3 @@ def results(request):
 #     response = ApiCaller.post(winners_url, body={'uris': winner_uris})
 #     print(response.json())
 #     return HttpResponse("Finished vote")
-
-@user_passes_test(lambda u: u.is_superuser)
-def reset_votes(request):
-    Vote.objects.all().delete()
-    return HttpResponse("Deleted votes")
-
-
-# def compare_random_ties(x, y):
-#     if x[1] < y[1]:
-#         return -1
-#     elif x[1] > y[1]:
-#         return 1
-#     else:
-#         return random.randint(0, 1) * 2 - 1
