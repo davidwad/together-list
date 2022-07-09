@@ -146,8 +146,12 @@ def finish_vote(request):
     votes_sorted = sorted(vote_dict.items(), key=cmp_to_key(compare_random_ties), reverse=True)
     top_tracks = [vote_inst[0] for vote_inst in votes_sorted[:N_WINNERS]]
     response = ApiCaller.get('tracks', params={'ids': ','.join(top_tracks)})
-    track_names = [track_item['name'] for track_item in response.json()['tracks']]
-    return HttpResponse("Results: {" + ' | '.join(track_names) + '}')
+    response_dict = response.json()
+    if 'tracks' in response_dict:
+        track_names = [track_item['name'] for track_item in response.json()['tracks']]
+        return HttpResponse('Results: {' + ' | '.join(track_names) + '}')
+    else:
+        return HttpResponse('No votes found.')
 
 
 @user_passes_test(lambda u: u.is_superuser)
