@@ -13,11 +13,11 @@ from .models import Vote
 from app.apicaller import ApiCaller
 
 
+# Test
 # PLAYLIST_ID = "7db8ovaFEAB4blO9f1oEEy?si=c05681fba3d546f6"
+
+# Real
 PLAYLIST_ID = '0bWBuhxBO3Ke2FC9Q6AjZk?si=f99503563b884268'
-# WINNERS_ID = '1ViBZ3W5zxAxqPeiUYp3Jb'
-WINNERS_ID = '54KFOefdMH1IMZe2385Q4f'
-LOSERS_ID = '1ViBZ3W5zxAxqPeiUYp3Jb?si=83b823de155743c5'
 
 
 def signin(request):
