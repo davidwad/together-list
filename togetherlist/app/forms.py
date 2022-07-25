@@ -29,4 +29,4 @@ class UserRegistrationForm(forms.ModelForm):
         fields = [
                 'username', 
                 'password'
-        ] 
+        ]

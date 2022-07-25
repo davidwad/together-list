@@ -53,21 +53,6 @@ def signup(request):
 	return render(request=request, template_name="signup.html", context={"form":form})
 
 
-def list_tracks(request):
-    request_url = 'playlists/{playlist_id}/tracks'.format(
-        playlist_id=PLAYLIST_ID)
-    response = ApiCaller.get(request_url)
-    response_dict = response.json()
-    track_string_list = []
-    for track in response_dict['tracks']['items']:
-        name = track['track']['name']
-        artists = [artist['name'] for artist in track['track']['artists']]
-        track_string_list.append(
-            '{artists} - {track}'.format(artists=', '.join(artists), track=name))
-
-    return render(request, 'list.html', {'tracks': track_string_list})
-
-
 @login_required
 def vote(request):
     user = request.user
@@ -149,7 +134,7 @@ def finish_vote(request):
     response_dict = response.json()
     if 'tracks' in response_dict:
         track_names = [track_item['name'] for track_item in response.json()['tracks']]
-        return HttpResponse('Results: {' + ' | '.join(track_names) + '}')
+        return render(request, 'finish.html', {'tracks': track_names})
     else:
         return HttpResponse('No votes found.')
 

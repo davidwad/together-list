@@ -1,5 +1,44 @@
 <form method="post">
     {% csrf_token %}
-    {{ form.as_table }}
-    <input type="submit" value="Vote" />
+    <fieldset>
+        <style>
+            fieldset {
+                border: 1px solid black;
+                border-collapse: collapse;
+                background-color: rgb(234, 238, 242);
+                margin-top: 15px;
+                margin-left: auto;
+                margin-right: auto;
+                box-shadow: 2px 2px 2px gray;
+            }
+            legend {
+                background-color: orange;
+                color: white;
+                padding: 5px 10px;
+                }
+            body {
+                font-family: 'Trebuchet MS';
+            }
+            input[type=submit] {
+                background-color:orange;
+                border: none;
+                color: white;
+                padding: 16px 32px;
+                margin: 10px 4px;
+                cursor: pointer;
+            }
+            input[type=checkbox] {
+                margin: 5px 2px;
+                cursor: pointer;
+            }
+        </style>
+        <legend>{{ form.Tracks.label }}</legend>
+        
+        {% for radio in form.Tracks %}
+        <div>
+            {{ radio.tag }} {{ radio.choice_label }}
+        </div>
+        {% endfor %}
+        <input type="submit" value="Vote" />
+    </fieldset>
 </form> 
