@@ -26,6 +26,21 @@
             height: 2em;
             text-align: center;
         }
+
+        /* Add styles for the buttons container */
+        .button-container {
+            text-align: center;
+            margin-top: 15px;
+        }
+
+        /* Add styles for the buttons */
+        button {
+            border: 1px solid black;
+            background-color: rgb(234, 238, 242);
+            margin: 15px;
+            padding: 10px;
+            cursor: pointer;
+        }
     </style>
 </head>
 <body>
@@ -45,5 +60,18 @@
             {% endfor %}
         </tr>
     </table>
+
+    <!-- Wrap the buttons in a container and apply styles -->
+    <div class="button-container">
+        <form action="{% url 'finish vote' %}" method="get">
+            {% csrf_token %}
+            <button type="submit" name='finish'>Finish vote</button>
+        </form>
+
+        <form action="{% url 'reset votes' %}" method="get">
+            {% csrf_token %}
+            <button type="submit" name='reset'>Clear votes and playlist</button>
+        </form>
+    </div>
 </body>
 </html>
