@@ -22,26 +22,6 @@ def get_access_token():
         return access_token
 
 
-# def refesh_access_token():
-#     params = {
-#         'grant_type': 'refresh_token',
-#         'refresh_token': REFRESH_TOKEN,
-#         'redirect_uri': REDIRECT_URI
-#     }
-#     headers = {
-#         'Authorization': AUTH_TOKEN,
-#         'Content-Type': 'application/x-www-form-urlencoded'
-#     }
-#     response = requests.post(AUTH_URL, params=params, headers=headers)
-#     if response.ok:
-#         try:
-#             response_dict = response.json()
-#             return response_dict['access_token']
-#         except (KeyError, json.decoder.JSONDecodeError):
-#             raise Exception('Authorization failed: ' + response.json()['error'])
-#     else:
-#         raise Exception('Authorization failed: ' + response.json()['error'])
-
 def refesh_access_token():
     params = {
         'grant_type': 'refresh_token',
