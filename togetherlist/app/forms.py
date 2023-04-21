@@ -1,10 +1,7 @@
-from ipaddress import v4_int_to_packed
 from django import forms
+from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.contrib.auth.models import User
-
-
-N_VOTES = 3
 
 
 class TrackForm(forms.Form):
@@ -12,8 +9,7 @@ class TrackForm(forms.Form):
         super(TrackForm, self).__init__(*args, **kwargs)
         self.form_name = 'Tracks'
         self.fields[self.form_name] =  forms.MultipleChoiceField(choices=choices, widget=forms.CheckboxSelectMultiple)
-        global N_VOTES
-        self.no_of_tracks = N_VOTES
+        self.no_of_tracks = settings.N_VOTES
 
     def clean(self):
         cleaned_data = super().clean()

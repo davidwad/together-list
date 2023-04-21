@@ -1,49 +1,42 @@
+{% load static %}
+
 <!DOCTYPE html>
 <html>
+
 <head>
     <meta charset="UTF-8">
     <title>Vote Results</title>
-    <style>
-        body {
-            font-family: 'Trebuchet MS';
-        }
-
-        table {
-            box-shadow: 2px 2px 2px gray;
-            margin-top: 15px;
-            margin-left: auto;
-            margin-right: auto;
-        }
-
-        table, th, td {
-            border: 1px solid black;
-            border-collapse: collapse;
-            background-color: rgb(234, 238, 242);
-        }
-
-        td {
-            margin: 10px 4px;
-            height: 2em;
-            text-align: center;
-        }
-    </style>
+    <link rel="stylesheet" href="{% static 'styles.css' %}">
 </head>
+
 <body>
     <table summary="vote results">
         <tr>
+            <style>
+                th {font-size: 20px;}
+            </style>
             <th>Track</th>
             <th>Artist</th>
             <th>Votes</th>
             <th>Voters</th>
             {% for track in tracks %}
-            <tr>
-                <td>{{ track.track }}</td>
-                <td>{{ track.artist }}</td>
-                <td>{{ track.n_votes }}</td>
-                <td>{{ track.voters }}</td>
-            </tr>
-            {% endfor %}
+        <tr>
+            <td>{{ track.track }}</td>
+            <td>{{ track.artist }}</td>
+            <td>{{ track.n_votes }}</td>
+            <td>{{ track.voters }}</td>
+        </tr>
+        {% endfor %}
         </tr>
     </table>
+    {% if is_superuser %}
+    <div class="button-container">
+        <form action="{% url 'finish vote' %}" method="get">
+            {% csrf_token %}
+            <button type="submit" name='finish'>Finish vote</button>
+        </form>
+    </div>
+    {% endif %}
 </body>
+
 </html>

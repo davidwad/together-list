@@ -9,27 +9,49 @@ https://docs.djangoproject.com/en/4.0/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/4.0/ref/settings/
 """
+import environ
 import os
 from pathlib import Path
 
-# Build paths inside the project like this: BASE_DIR / 'subdir'.
+
 BASE_DIR = Path(__file__).resolve().parent.parent
+env = environ.Env(
+    DEBUG=(bool, False),
+    N_WINNERS=(int, 3),
+    N_VOTES=(int, 3)
+)
+environ.Env.read_env(os.path.join(BASE_DIR, '.env'))
 
 
-# Quick-start development settings - unsuitable for production
-# See https://docs.djangoproject.com/en/4.0/howto/deployment/checklist/
+# Secrets and auth
 
-# SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-lg!qeamzz8!y)@lqa(e0vkvlm2azkupku8vapjhj#_34(h_z^%'
+SECRET_KEY = env('SECRET_KEY')
 
-# SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = env('DEBUG')
+
+AUTH_TOKEN = env('AUTH_TOKEN')
+
+REFRESH_TOKEN = env('REFRESH_TOKEN')
 
 ALLOWED_HOSTS = ['*']
 
 LOGIN_URL = '/app/login/'
 
-# Application definition
+
+# Application settings
+
+N_WINNERS = env('N_WINNERS')
+
+N_VOTES = env('N_VOTES')
+
+BASE_PLAYLIST_ID = env('BASE_PLAYLIST_ID')
+
+WINNERS_PLAYLIST_ID = env('WINNERS_PLAYLIST_ID')
+
+LOSERS_PLAYLIST_ID = env('LOSERS_PLAYLIST_ID')
+
+
+# Django application definition
 
 INSTALLED_APPS = [
     'app',
@@ -118,6 +140,11 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/4.0/howto/static-files/
 
 STATIC_URL = 'static/'
+
+STATICFILES_DIRS = [
+    os.path.join(BASE_DIR, 'static'),
+]
+
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.0/ref/settings/#default-auto-field

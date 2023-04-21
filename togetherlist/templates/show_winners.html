@@ -1,0 +1,33 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <title>Vote Results</title>
+    <link rel="stylesheet" href="{% static 'styles.css' %}">
+</head>
+
+<body>
+    <h1>
+        Winners
+    </h1>
+
+    <ol>
+        {% for track in winning_tracks %}
+        <li>
+            {{ track }}
+        </li>
+        {% endfor %}
+    </ol>
+
+    <div class="button-container">
+        <form action="{% url 'results' %}" method="get">
+            {% csrf_token %}
+            <button type="submit" name='results'>Got it</button>
+        </form>
+    </div>
+</body>
+
+</html>

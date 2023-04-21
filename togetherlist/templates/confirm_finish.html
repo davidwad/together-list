@@ -1,0 +1,28 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <title>Vote Results</title>
+    <link rel="stylesheet" href="{% static 'styles.css' %}">
+</head>
+
+<body>
+    <div style="width:800px; margin:0 auto;">
+        <h1>Finish vote?</h1>
+        <p>Are you sure you want to finish this round of voting?</p>
+        <p>
+            The winning and losing songs will be chosen and moved to their respective
+            playlists.
+        </p>
+        <p>All of the tracks in the main playlist will then be deleted.</p>
+        <form action="" method="post">
+            {% csrf_token %}
+            <input type="submit" value="Proceed" />
+        </form>
+    </div>
+</body>
+
+</html>

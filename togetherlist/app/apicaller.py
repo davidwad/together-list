@@ -1,4 +1,3 @@
-import json
 import requests
 
 from app.auth import get_access_token

@@ -1,76 +1,19 @@
+{% load static %}
+
 <!DOCTYPE html>
 <html>
+
 <head>
-	<title>Vote Form</title>
-	<style>
-		body {
-			font-family: 'Trebuchet MS';
-			background-color: #f2f2f2;
-		}
-
-		form {
-			margin: 50px auto;
-			max-width: 1200px;
-			background-color: #fff;
-			border: 1px solid #ddd;
-			border-radius: 10px;
-			box-shadow: 2px 2px 2px rgba(0, 0, 0, 0.1);
-			padding: 30px;
-		}
-
-		legend {
-			background-color: #FFA500;
-			color: white;
-			font-size: 20px;
-			font-weight: bold;
-			padding: 10px 20px;
-			border-radius: 5px;
-			margin-bottom: 10px;
-		}
-
-		fieldset {
-			border: none;
-			margin: 0;
-			padding: 0;
-		}
-
-		label {
-			display: block;
-			font-size: 18px;
-			font-weight: bold;
-			margin-bottom: 10px;
-			cursor: pointer;
-			transition: background-color 0.3s ease-in-out;
-		}
-
-		input[type=radio] {
-			margin-right: 10px;
-			cursor: pointer;
-		}
-
-		input[type=submit] {
-			background-color: #FFA500;
-			color: white;
-			font-size: 18px;
-			border: none;
-			border-radius: 5px;
-			padding: 10px 20px;
-			margin-top: 20px;
-			cursor: pointer;
-			transition: background-color 0.3s ease-in-out;
-		}
-
-		label:hover,
-		input[type=submit]:hover {
-			background-color: #FFEFD5;
-		}
-	</style>
+	<meta charset="UTF-8">
+	<title>Vote For Your Favorite Tracks</title>
+	<link rel="stylesheet" href="{% static 'styles.css' %}">
 </head>
+
 <body>
-    <fieldset>
-	<form method="post">
-		{% csrf_token %}
-		
+	<fieldset>
+		<form method="post">
+			{% csrf_token %}
+
 			<legend>{{ form.Tracks.label }}</legend>
 			{% for radio in form.Tracks %}
 			<label>
@@ -78,16 +21,16 @@
 			</label>
 			{% endfor %}
 			<input type="submit" value="Vote" />
-		
-	</form>
-    {% if messages %}
-    <ul class="messages">
-        {% for message in messages %}
-        <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
-        {% endfor %}
-    </ul>
-    {% endif %}
-    </fieldset>
-</body>
-</html>
 
+		</form>
+		{% if messages %}
+		<ul class="messages">
+			{% for message in messages %}
+			<li{% if message.tags %} class="{{ message.tags }}" {% endif %}>{{ message }}</li>
+				{% endfor %}
+		</ul>
+		{% endif %}
+	</fieldset>
+</body>
+
+</html>

@@ -5,24 +5,12 @@ from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib import messages
 from django.conf import settings
-from django.shortcuts import render, redirect
 from django.http import HttpResponse, HttpResponseRedirect
+from django.shortcuts import render, redirect
 
-from .forms import TrackForm, UserForm, N_VOTES
+from .forms import TrackForm, UserForm
 from .models import Vote
 from app.apicaller import ApiCaller
-
-
-# Test
-# BASE_PLAYLIST_ID = "2OmfiRqM8FdFaI2jqp0ZRu?si=f60c68a218c041ba"
-BASE_PLAYLIST_ID = "2OmfiRqM8FdFaI2jqp0ZRu"
-WINNERS_PLAYLIST_ID = "1ViBZ3W5zxAxqPeiUYp3Jb"
-LOSERS_PLAYLIST_ID = "7fha2Ls1ioLYKI3rE7JNZz"
-
-# Real
-# BASE_PLAYLIST_ID = '0bWBuhxBO3Ke2FC9Q6AjZk?si=f99503563b884268'
-
-N_WINNERS = 3
 
 
 def signin(request):
@@ -65,7 +53,7 @@ def vote(request):
     if Vote.objects.filter(user=user).exists():
         return redirect(results)
     request_url = 'playlists/{playlist_id}/tracks'.format(
-        playlist_id=BASE_PLAYLIST_ID)
+        playlist_id=settings.BASE_PLAYLIST_ID)
     response = ApiCaller.get(request_url)
     response_dict = response.json()
     form_list = []
@@ -86,7 +74,7 @@ def vote(request):
                 vote_instance.save()
             return HttpResponseRedirect('results')
         else:
-            messages.info(request, 'You must select exactly {n_votes} tracks!'.format(n_votes=N_VOTES))
+            messages.info(request, 'You must select exactly {n_votes} tracks!'.format(n_votes=settings.N_VOTES))
             return render(request, 'vote.html', {'form': form})
     else:
         form = TrackForm(choices=form_list)
@@ -94,7 +82,7 @@ def vote(request):
 
 
 def results(request):
-    tracks = get_all_tracks(BASE_PLAYLIST_ID)
+    tracks = get_all_tracks(settings.BASE_PLAYLIST_ID)
     track_vote_list = []
     for track in tracks:
         track_dict = {}
@@ -114,65 +102,24 @@ def results(request):
             track_dict['voters'] = ''
         track_vote_list.append(track_dict)
     if request.user.is_superuser:
-        return render(request, 'list_votes_superuser.html', {'tracks': track_vote_list})
+        return render(request, 'list_votes.html', {'tracks': track_vote_list, 'is_superuser': True})
     else:
         return render(request, 'list_votes.html', {'tracks': track_vote_list})
 
 
 @user_passes_test(lambda u: u.is_superuser)
 def finish_vote(request):
-    vote_dict = {}
-    # Count votes for each track
-    for vote_instance in Vote.objects.all():
-        track_id = vote_instance.track_id
-        if track_id in vote_dict:
-            vote_dict[track_id] += 1
+    if request.method == 'POST':
+        tracks = get_all_tracks(settings.BASE_PLAYLIST_ID)
+        if len(tracks) > 0:
+            winning_tracks = move_tracks(tracks)
+            delete_tracks_and_votes(tracks)
+            return render(request, 'show_winners.html', {'winning_tracks': winning_tracks})
         else:
-            vote_dict[track_id] = 1
-    
-    if len(vote_dict) == 0:
-        return HttpResponse('No votes found.')
+            return redirect('results')
+        
 
-    # Pick winners with most votes
-    votes_sorted = sorted(vote_dict.items(), key=cmp_to_key(compare_random_ties), reverse=True)
-    winner_ids = [vote_inst[0] for vote_inst in votes_sorted[:N_WINNERS]]
-
-    # Get info for winning and losing tracks from Spotify API
-    winner_names = []
-    winner_uris = []
-    loser_uris = []
-    tracks = get_all_tracks(BASE_PLAYLIST_ID)
-    for track in tracks:
-        track_id = track['id']
-        if track_id in winner_ids:
-            winner_names.append(track['name'])
-            winner_uris.append(track['uri'])
-        else:
-            loser_uris.append(track['uri'])
-
-    # Add tracks to winner and loser playlists
-    add_tracks_to_playlist(loser_uris, LOSERS_PLAYLIST_ID)
-    add_tracks_to_playlist(winner_uris, WINNERS_PLAYLIST_ID)
-
-    return render(request, 'finish.html', {'tracks': winner_names})
-
-
-@user_passes_test(lambda u: u.is_superuser)
-def reset_votes(request):
-    # Get all track URIs in playlist
-    tracks = get_all_tracks(BASE_PLAYLIST_ID)
-    track_uris = []
-    for track in tracks:
-        track_uris.append({'uri': track['uri']})
-
-    # Delete votes
-    Vote.objects.all().delete()
-
-    # Delete all tracks in playlist
-    request_url = 'playlists/{playlist_id}/tracks'.format(
-        playlist_id=BASE_PLAYLIST_ID)
-    ApiCaller.delete(request_url, body={'tracks': track_uris})
-    return HttpResponse("Deleted votes")
+    return render(request, 'confirm_finish.html')
 
 
 def compare_random_ties(x, y):
@@ -193,10 +140,61 @@ def add_tracks_to_playlist(track_uris: list[str], playlist_id: str):
 
 def get_all_tracks(playlist_id: str) -> list:
     request_url = 'playlists/{playlist_id}/tracks'.format(
-        playlist_id=BASE_PLAYLIST_ID)
+        playlist_id=playlist_id)
     response = ApiCaller.get(request_url)
     response_dict = response.json()
     if 'items' in response_dict:
         return [item['track'] for item in response_dict['items']]
     else:
         return []
+
+
+def move_tracks(tracks: list[dict]) -> list[str]:
+    vote_dict = {}
+    # Count votes for each track
+    for vote_instance in Vote.objects.all():
+        track_id = vote_instance.track_id
+        if track_id in vote_dict:
+            vote_dict[track_id] += 1
+        else:
+            vote_dict[track_id] = 1
+    
+    if len(vote_dict) == 0:
+        return []
+
+    # Pick winners with most votes
+    votes_sorted = sorted(vote_dict.items(), key=cmp_to_key(compare_random_ties), reverse=True)
+    winner_ids = [vote_inst[0] for vote_inst in votes_sorted[:settings.N_WINNERS]]
+
+    # Get info for winning and losing tracks from Spotify API
+    winner_names = []
+    winner_uris = []
+    loser_uris = []
+    for track in tracks:
+        track_id = track['id']
+        if track_id in winner_ids:
+            winner_names.append(track['name'])
+            winner_uris.append(track['uri'])
+        else:
+            loser_uris.append(track['uri'])
+
+    # Add tracks to winner and loser playlists
+    add_tracks_to_playlist(loser_uris, settings.LOSERS_PLAYLIST_ID)
+    add_tracks_to_playlist(winner_uris, settings.WINNERS_PLAYLIST_ID)
+
+    return winner_names
+
+
+def delete_tracks_and_votes(tracks: list[dict]):
+    # Extract track URIs
+    track_uris = []
+    for track in tracks:
+        track_uris.append({'uri': track['uri']})
+
+    # Delete votes
+    Vote.objects.all().delete()
+
+    # Delete all tracks in playlist
+    request_url = 'playlists/{playlist_id}/tracks'.format(
+        playlist_id=settings.BASE_PLAYLIST_ID)
+    ApiCaller.delete(request_url, body={'tracks': track_uris})
